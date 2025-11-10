@@ -19,11 +19,13 @@ module tt_um_quick_cpu (
   // All output pins must be assigned. If not used, assign to 0.
   //assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
   assign uio_out = 0;
-  assign uio_oe  = 8'b00000001;
+  assign uio_oe  = 8'b00000011;
 
   wire mem_read;
+  wire mem_write;
   //reg mem_read;
   assign uio_out[0] = mem_read;
+  assign uio_out[1] = mem_write;
 
   // instruction
   reg[7:0] pc;    // program counter
@@ -48,6 +50,13 @@ module tt_um_quick_cpu (
   //       2. set ou_out to value of reg_b
   //          set memory_read to 1
   //       3. read value of ui_in into reg_a
+  // store instruction:
+  //    store [reg_b], reg_a
+  //    micro:
+  //       2. set ou_out to value of reg_b
+  //          set memory_write to 1
+  //       3. set ou_out to value of reg_a
+  //          set memory_write to 0
 
   // 0000leri load [ri] into le
   // 0001leri store le into [ri]
@@ -67,11 +76,15 @@ module tt_um_quick_cpu (
       : reg_d;
 
   assign uo_out = (mc == 0) ? pc
-    : (mc == 2 && instr[7:4] == 4'b0000) ? right_bus // load
+    : (mc == 2 && instr[7:5] == 3'b000) ? right_bus // load/store
+    : (mc == 3 && instr[7:4] == 4'b0001) ? left_bus // store
     : 0;
 
   assign mem_read = (mc == 0) ||
       (mc == 2 && instr[7:4] == 4'b0000); // load
+
+  assign mem_write =
+      (mc == 2 && instr[7:4] == 4'b0001); // store
 
   always @(negedge rst_n or posedge clk) begin
     if (~rst_n) begin
