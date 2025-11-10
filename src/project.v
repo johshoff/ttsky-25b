@@ -33,8 +33,7 @@ module tt_um_quick_cpu (
     : 0;
 
   always @(negedge rst_n or posedge clk) begin
-    if (rst_n == 0) rst <= 1;
-    else            rst <= 0;
+    rst <= ~rst_n;
   end
 
   always @(posedge clk) begin
