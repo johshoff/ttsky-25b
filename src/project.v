@@ -26,6 +26,7 @@ module tt_um_quick_cpu (
 
   // instruction
   reg[7:0] pc;    // program counter
+  reg[7:0] next_pc; // next program counter
   reg[1:0] mc;    // micro instruction counter
   reg[7:0] instr; // current instruction
   //reg[7:0] micro; // current micro instruction
@@ -62,6 +63,10 @@ module tt_um_quick_cpu (
   //    sub reg_left, reg_right
   //    micro:
   //       2. reg_left <= reg_left - reg_right
+  // conditional jump instruction:
+  //    jz reg_left, reg_right
+  //    micro:
+  //       2. set next_pc conditionally
 
   // 0000leri load [ri] into le
   // 0001leri store le into [ri]
@@ -98,6 +103,7 @@ module tt_um_quick_cpu (
   always @(negedge rst_n or posedge clk) begin
     if (~rst_n) begin
       pc <= 0;
+      next_pc <= 1;
       mc <= 0;
       instr <= 0;
       reg_a <= 0;
@@ -107,12 +113,34 @@ module tt_um_quick_cpu (
     end else begin
       if (mc == 3) begin
         mc <= 0;
-        pc <= pc + 1;
+        pc <= next_pc;
+        next_pc <= next_pc + 1;
       end else begin
         mc <= mc + 1;
       end
       if (mc == 0) begin // coming from 0 to 1
         instr <= ui_in;
+      end
+      if (mc == 1) begin // coming from 1 to 2
+        if (instr[7:5] == 3'b001) begin // add/sub
+          case (instr[3:2])
+            0: reg_a <= result;
+            1: reg_b <= result;
+            2: reg_c <= result;
+            3: reg_d <= result;
+          endcase
+        end
+        if (instr[7:6] == 2'b01) begin // conditional jump
+          case (instr[5:4])
+           0: if (left_bus == 0) next_pc <= right_bus;
+           1: if (left_bus[7] == 0) next_pc <= right_bus;
+           2: if (left_bus[7] == 1) next_pc <= right_bus;
+           3: if (left_bus != 0) next_pc <= right_bus;
+          endcase
+        end
+        if (instr[7:2] == 6'b100000) begin // unconditional jump
+         next_pc <= right_bus;
+        end
       end
       if (mc == 2) begin // coming from 2 to 3
         if (instr[7:4] == 4'b0000) begin
@@ -121,13 +149,6 @@ module tt_um_quick_cpu (
             1: reg_b <= ui_in;
             2: reg_c <= ui_in;
             3: reg_d <= ui_in;
-          endcase
-        end else if (instr[7:5] == 4'b001) begin // add/sub
-          case (instr[3:2])
-            0: reg_a <= result;
-            1: reg_b <= result;
-            2: reg_c <= result;
-            3: reg_d <= result;
           endcase
         end
       end
