@@ -43,6 +43,7 @@ module tb ();
 
 		$monitor(
 			"  uo_out ", uo_out,
+			"  mc ", cpu.mc,
 			"  pc ", cpu.pc,
 			"  rst_n ", rst_n,
 			""
