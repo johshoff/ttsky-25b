@@ -1,20 +1,13 @@
-<!---
-
-This file is used to generate your project datasheet. Please fill in the information below and delete any unused
-sections.
-
-You can also include images in this folder and reference them in the markdown. Each image must be less than
-512 kb in size, and the combined size of all images must be less than 1 MB.
--->
 
 ## How it works
 
-Explain how your project works
+A very simple CPU, mostly inspired by Ben Eater and the game turing complete.
+Started 4 hours before submission deadline for no good reason.
 
 ## How to test
 
-Explain how to use your project
+Use RP2xxx on testing board as a memory controller and run programs.
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+RP2040/RP2350 on test board
