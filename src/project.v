@@ -19,7 +19,11 @@ module tt_um_quick_cpu (
   // All output pins must be assigned. If not used, assign to 0.
   //assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
   assign uio_out = 0;
-  assign uio_oe  = 0;
+  assign uio_oe  = 8'b00000001;
+
+  wire mem_read;
+  //reg mem_read;
+  assign uio_out[0] = mem_read;
 
   // instruction
   reg[7:0] pc;    // program counter
@@ -28,12 +32,14 @@ module tt_um_quick_cpu (
   //reg[7:0] micro; // current micro instruction
   reg[7:0] reg_a;
   reg[7:0] reg_b;
+  reg[7:0] reg_c;
+  reg[7:0] reg_d;
 
   // micro instruction cycle:
   //   0. set ou_out to value of pc
   //      set memory_read to 1
   //   1. read value ui_in into instr
-  //   2. set memory_read to 0
+  //      set memory_read to 0
   // then:
   //
   // load instruction:
@@ -43,8 +49,29 @@ module tt_um_quick_cpu (
   //          set memory_read to 1
   //       3. read value of ui_in into reg_a
 
-  assign uo_out = (mc == 0 || mc == 1) ? pc
+  // 0000leri load [ri] into le
+  // 0001leri store le into [ri]
+  // 0010leri le = le-ri
+  // 0011leri le = le+ri
+  // 0100leri le==0: jmp to ri
+
+  wire[7:0] left_bus =
+        instr[3:2] == 0 ? reg_a
+      : instr[3:2] == 1 ? reg_b
+      : instr[3:2] == 2 ? reg_c
+      : reg_d;
+  wire[7:0] right_bus =
+        instr[1:0] == 0 ? reg_a
+      : instr[1:0] == 1 ? reg_b
+      : instr[1:0] == 2 ? reg_c
+      : reg_d;
+
+  assign uo_out = (mc == 0) ? pc
+    : (mc == 2 && instr[7:4] == 4'b0000) ? right_bus // load
     : 0;
+
+  assign mem_read = (mc == 0) ||
+      (mc == 2 && instr[7:4] == 4'b0000); // load
 
   always @(negedge rst_n or posedge clk) begin
     if (~rst_n) begin
@@ -52,7 +79,9 @@ module tt_um_quick_cpu (
       mc <= 0;
       instr <= 0;
       reg_a <= 0;
-      reg_b <= 1;
+      reg_b <= 0;
+      reg_c <= 0;
+      reg_d <= 0;
     end else begin
       if (mc == 3) begin
         mc <= 0;
@@ -60,8 +89,18 @@ module tt_um_quick_cpu (
       end else begin
         mc <= mc + 1;
       end
-      if (mc == 1) begin
+      if (mc == 0) begin // coming from 0 to 1
         instr <= ui_in;
+      end
+      if (mc == 2) begin // coming from 2 to 3
+          if (instr[7:4] == 4'b0000) begin
+            case (instr[3:2])
+              0: reg_a <= ui_in;
+              1: reg_b <= ui_in;
+              2: reg_c <= ui_in;
+              3: reg_d <= ui_in;
+            endcase
+          end
       end
     end
   end

@@ -37,15 +37,23 @@ module tb ();
       .rst_n  (rst_n)     // not reset
   );
 
+	reg[7:0] memory[0:255];
+
 	initial begin
-		// optionally overwrite the program in RAM
-		//$readmemh("build/largest_divisor.hex", m.m.data);
+		$readmemb("test-mem.bin", memory);
 
 		$monitor(
 			"  uo_out ", uo_out,
 			"  mc ", cpu.mc,
 			"  pc ", cpu.pc,
-			"  rst_n ", rst_n,
+			//"  rst_n ", rst_n,
+			"  mem_read ", cpu.mem_read,
+			"  instr ", cpu.instr,
+			"  a ", cpu.reg_a,
+			"  b ", cpu.reg_b,
+			"  c ", cpu.reg_c,
+			"  d ", cpu.reg_d,
+			"  right ", cpu.right_bus,
 			""
 		);
 
@@ -53,6 +61,13 @@ module tb ();
 			if (i==5) rst_n<=0;
 			if (i==10) rst_n<=1;
 			//if (halted) $finish();
+			@(negedge clk);
+			if (cpu.mem_read) begin
+				//$display("reading", memory[uo_out]," from memory location", uo_out);
+				ui_in <= memory[uo_out];
+			end else begin
+				ui_in <= 0;
+			end
 			@(posedge clk);
 		end
 		$display("INSTRUCTION TEST LIMIT REACHED!");
