@@ -26,18 +26,13 @@ module tt_um_quick_cpu (
   reg[7:0] inst;
   reg[7:0] reg_a;
   reg[7:0] reg_b;
-  reg rst;
 
   assign uo_out = inst == 0 ? reg_a
     : inst == 1 ? reg_b
     : 0;
 
   always @(negedge rst_n or posedge clk) begin
-    rst <= ~rst_n;
-  end
-
-  always @(posedge clk) begin
-    if (rst) begin
+    if (~rst_n) begin
       pc <= 0;
       inst <= 0;
       reg_a <= 0;
@@ -49,6 +44,6 @@ module tt_um_quick_cpu (
   end
 
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena};
+  wire _unused = &{ena, ui_in, uio_in};
 
 endmodule

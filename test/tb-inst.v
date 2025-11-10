@@ -45,7 +45,6 @@ module tb ();
 			"  uo_out ", uo_out,
 			"  pc ", cpu.pc,
 			"  rst_n ", rst_n,
-			"  rst ", cpu.rst,
 			""
 		);
 
