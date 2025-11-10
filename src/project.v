@@ -73,6 +73,7 @@ module tt_um_quick_cpu (
   // 0010leri le = le-ri
   // 0011leri le = le+ri
   // 0100leri le==0: jmp to ri
+  // 1xxxxxle store immediate
 
   wire[7:0] left_bus =
         instr[3:2] == 0 ? reg_a
@@ -140,6 +141,14 @@ module tt_um_quick_cpu (
         end
         if (instr[7:2] == 6'b100000) begin // unconditional jump
          next_pc <= right_bus;
+        end
+        if (instr[7] == 1) begin // unconditional jump
+          case (instr[1:0])
+            0: reg_a <= { 3'b000, instr[6:2] };
+            1: reg_b <= { 3'b000, instr[6:2] };
+            2: reg_c <= { 3'b000, instr[6:2] };
+            3: reg_d <= { 3'b000, instr[6:2] };
+          endcase
         end
       end
       if (mc == 2) begin // coming from 2 to 3
