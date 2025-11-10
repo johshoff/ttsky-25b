@@ -57,6 +57,14 @@ module tt_um_quick_cpu (
   //          set memory_write to 1
   //       3. set ou_out to value of reg_a
   //          set memory_write to 0
+  // add instruction:
+  //    add reg_left, reg_right
+  //    micro:
+  //       2. reg_left <= reg_left + reg_right
+  // sub instruction:
+  //    sub reg_left, reg_right
+  //    micro:
+  //       2. reg_left <= reg_left - reg_right
 
   // 0000leri load [ri] into le
   // 0001leri store le into [ri]
@@ -74,6 +82,10 @@ module tt_um_quick_cpu (
       : instr[1:0] == 1 ? reg_b
       : instr[1:0] == 2 ? reg_c
       : reg_d;
+  wire[7:0] result =
+      (instr[7:4] == 4'b0010) ? left_bus - right_bus
+    //: instr[7:4] == 4'b0011) ? left_bus + right_bus
+    : left_bus + right_bus;
 
   assign uo_out = (mc == 0) ? pc
     : (mc == 2 && instr[7:5] == 3'b000) ? right_bus // load/store
@@ -106,14 +118,21 @@ module tt_um_quick_cpu (
         instr <= ui_in;
       end
       if (mc == 2) begin // coming from 2 to 3
-          if (instr[7:4] == 4'b0000) begin
-            case (instr[3:2])
-              0: reg_a <= ui_in;
-              1: reg_b <= ui_in;
-              2: reg_c <= ui_in;
-              3: reg_d <= ui_in;
-            endcase
-          end
+        if (instr[7:4] == 4'b0000) begin
+          case (instr[3:2])
+            0: reg_a <= ui_in;
+            1: reg_b <= ui_in;
+            2: reg_c <= ui_in;
+            3: reg_d <= ui_in;
+          endcase
+        end else if (instr[7:5] == 4'b001) begin // add/sub
+          case (instr[3:2])
+            0: reg_a <= result;
+            1: reg_b <= result;
+            2: reg_c <= result;
+            3: reg_d <= result;
+          endcase
+        end
       end
     end
   end
