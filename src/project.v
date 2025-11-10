@@ -18,14 +18,11 @@ module tt_um_quick_cpu (
 
   // All output pins must be assigned. If not used, assign to 0.
   //assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
+  assign uio_out = { 6'b000000, mem_write, mem_read };
   assign uio_oe  = 8'b00000011;
 
   wire mem_read;
   wire mem_write;
-  //reg mem_read;
-  assign uio_out[0] = mem_read;
-  assign uio_out[1] = mem_write;
 
   // instruction
   reg[7:0] pc;    // program counter
